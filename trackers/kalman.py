@@ -147,7 +147,6 @@ class KalmanBoxTracker(object):
         x = [u, v, s, r, u˙, v˙, s˙]
            [ 0, 1, 2, 3, 4 , 5 , 6 ]
         """
-        print("start of KalmanBoxTracker.predict")
         if (self.kf.x[6] + self.kf.x[2]) <= 0:
             self.kf.x[6] *= 0.0
         self.kf.predict()

@@ -35,9 +35,7 @@ class Sort(object):
         ret = []
 
         for t, trk in enumerate(trackers):
-            print("\nbefore predict in sort.update")
             pos = self.trackers[t].predict()[0]  # predict new value
-            print("\nafter predict in sort.update and the pos is", pos)
             # TODO add that ==> trk[:] = [pos[0], pos[1], pos[2], pos[3], 0 , Person class index]
             # trk[:] = [pos[0], pos[1], pos[2], pos[3], 0]
             trk[:] = [pos[0], pos[1], pos[2], pos[3], 0, 0]
