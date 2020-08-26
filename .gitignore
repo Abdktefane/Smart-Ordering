@@ -1,0 +1,6 @@
+__pycache__
+.DS_Store
+tmp
+.vscode
+efficientdet-d0
+savedmodeldir
