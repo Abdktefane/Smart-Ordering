@@ -15,8 +15,8 @@ model_name = 'efficientdet-d0'
 image_size = '512x512'
 batch_size = 1
 use_xla = False
-nms_score_thresh = 0.4
-detection_threshold = 0.4
+nms_score_thresh = 0.3
+detection_threshold = 0.3
 line_thickness = 4
 nms_max_output_size = 20
 ckpt = "efficientdet-d0"
@@ -51,7 +51,8 @@ def process_image(frame, driver, fps_print: bool = False):
     frame = np.array(frame)
     detections = driver.serve_images([frame])
     # TODO filter detections class here and max detections here
-    filtered_detection = np.array([detection for detection in detections[0] if detection[5] > detection_threshold])
+    filtered_detection = np.array(
+        [detection for detection in detections[0] if detection[5] > detection_threshold and detection[6] == 1])
     if len(filtered_detection) == 0:
         return
     trackers = track(filtered_detection)
@@ -66,7 +67,7 @@ def process_image(frame, driver, fps_print: bool = False):
 
 def visualize_image(frame, trackers, fps=None):
     frame = overlay_util.paint_overlay(frame, trackers, detection_threshold, nms_max_output_size, line_thickness, fps)
-    #frame.show()
+    # frame.show()
     cv2.imshow("Image", frame)
 
 

@@ -4,3 +4,5 @@ tmp
 .vscode
 efficientdet-d0
 savedmodeldir
+networks
+detections

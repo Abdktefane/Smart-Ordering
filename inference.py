@@ -375,7 +375,7 @@ def visualize_image_prediction(image,
 
     label_id_mapping = label_id_mapping or coco_id_mapping
 
-    return visualize_image(image, boxes, classes, scores, label_id_mapping,**kwargs)
+    return visualize_image(image, boxes, classes, scores, label_id_mapping, **kwargs)
 
 
 class ServingDriver(object):
@@ -603,8 +603,7 @@ class ServingDriver(object):
 
         # Load saved model if it is a folder.
         if tf.io.gfile.isdir(saved_model_dir_or_frozen_graph):
-            return tf.saved_model.load(self.sess, ['serve'],
-                                       saved_model_dir_or_frozen_graph)
+            return tf.saved_model.load(self.sess, ['serve'], saved_model_dir_or_frozen_graph)
 
         # Load a frozen graph.
         graph_def = tf.GraphDef()

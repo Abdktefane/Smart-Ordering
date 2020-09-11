@@ -401,7 +401,7 @@ def _generate_detections(cls_outputs, box_outputs, anchor_boxes, indices,
       prediction on all selected anchors from top-k selection.
     image_id: an integer number to specify the image id.
     image_scale: a float tensor representing the scale between original image
-      and input image for the detector. It is used to rescale detections for
+      and input image for the detectors. It is used to rescale detections for
       evaluating with the original groundtruth annotations.
     num_classes: a integer that indicates the number of classes.
     max_boxes_to_draw: max number of boxes to draw per image.

@@ -18,7 +18,7 @@
 
 Specifies:
   InputDataFields: standard fields used by reader/preprocessor/batcher.
-  DetectionResultFields: standard fields returned by object detector.
+  DetectionResultFields: standard fields returned by object detectors.
   BoxListFields: standard field used by BoxList
   TfExampleFields: standard fields for tf-example data format (go/tf-example).
 """
@@ -112,7 +112,7 @@ class InputDataFields(object):
 
 
 class DetectionResultFields(object):
-  """Naming conventions for storing the output of the detector.
+  """Naming conventions for storing the output of the detectors.
 
   Attributes:
     source_id: source of the original image.
