@@ -2,7 +2,7 @@ __pycache__
 .DS_Store
 tmp
 .vscode
-efficientdet-d0
-savedmodeldir
-networks
-detections
+resources/efficientdet-d0
+resources/savedmodeldir
+resources/networks
+resources/detections
