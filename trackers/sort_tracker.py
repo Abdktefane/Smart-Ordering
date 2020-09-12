@@ -21,7 +21,6 @@ class Sort(Tracker):
         )
 
     def _match(self, detections):
-        # return util.associate_detections_to_trackers(detections, self.tracks, self.min_score_thresh)
         return util.min_cost_matching(
             distance_metric=util.iou_cost,
             max_distance=self.min_score_thresh,
@@ -29,7 +28,6 @@ class Sort(Tracker):
             detections=detections
         )
 
-    # detections: a list of vector, with each vector has the format of [ymin, xmin, ymax, xmax, score, class]
     def _update(self, detections):
         """
         Params:

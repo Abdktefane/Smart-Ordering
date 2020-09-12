@@ -7,7 +7,7 @@ from utils import nn_matching
 from utils import features_util
 
 
-# TODO add feature extractor here and put it in match
+# TODO add feature extractor here and put it in _modify_detections) (DONE)
 class DeepSort(Tracker):
     def __init__(
             self,
@@ -18,13 +18,34 @@ class DeepSort(Tracker):
             nn_init=default_params['nn_init'],
             filter=KalmanFilter()
     ):
+        """"
+        @param max_cosine_distance: float
+            The cosine distance threshold. Samples with larger distance are considered an
+            invalid match.
+        @param nn_budget: Optional[int]
+            gallery size, If not None, fix samples per class to at most this number. Removes
+            the oldest samples when the budget is reached.
+        @param min_score_thresh: float
+            iou threshold
+        @param max_age: int
+            The maximum number of consecutive misses before the track state is
+            set to `Deleted`.
+        @param nn_init: int
+            Number of consecutive detections before the track is confirmed. The
+            track state is set to `Deleted` if a miss occurs within the first
+            `n_init` frames.
+        @param filter: trackers.kalman_filter.KalmanFilter
+            mathematical idea to predict state of observed object.
+
+        """
         super(DeepSort, self).__init__(
             min_score_thresh=min_score_thresh,
             max_age=max_age,
             nn_init=nn_init,
             filter=filter
         )
-        self.feature_extractor = features_util.create_box_encoder(model_filename='networks/mars-small128.pb')
+        # create the feature extractor model
+        self.feature_extractor = features_util.create_box_encoder()
         self.metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget)
 
     def _match(self, detections):
@@ -125,6 +146,16 @@ class DeepSort(Tracker):
         return np.array([trk.to_visualize() for trk in self.tracks]).reshape(-1, 7)
 
     def _extract_features(self, detections, frame):
+        """
+        feed frame to feature_extractor model for extract feature for each detections
+        and add to it .
+
+        @param detections: List[detectors.detection.Detection]
+            A list of detections at the current time step.
+        @param frame: ndarray
+            the input image
+        @return: List[detectors.detection.Detection]
+        """
         features = self.feature_extractor(frame, [d.to_tlbr() for d in detections])
         # detections = [det.set_feature(feature) and det for det, feature in zip(detections, features)]
         featured_detection = []

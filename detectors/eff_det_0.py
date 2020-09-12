@@ -45,15 +45,15 @@ class EfficientDet0(Detector):
         config.anchor_scale = [1.0, 1.0, 1.0, 1.0, 1.0]
         self.config = config
         self.driver = inference.ServingDriver(
-            model_name="efficientdet-d0",
-            ckpt_path="efficientdet-d0",
+            model_name=default_params["detector_model_name"],
+            ckpt_path=default_params["eff_det_0_model_path"],
             batch_size=1,
             min_score_thresh=min_score_thresh,
             max_boxes_to_draw=max_boxes_to_draw,
             use_xla=default_params['use_xla'],
             model_params=config.as_dict()
         )
-        saved_model_dir = 'savedmodeldir'
+        saved_model_dir = default_params["detector_saved_model_dir"]
         self.driver.load(saved_model_dir)
 
     def __call__(self, image):

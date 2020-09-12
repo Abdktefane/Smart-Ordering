@@ -1,4 +1,3 @@
-# vim: expandtab:ts=4:sw=4
 import numpy as np
 
 
@@ -127,7 +126,6 @@ class NearestNeighborDistanceMetric(object):
     """
 
     def __init__(self, metric, matching_threshold, budget=None):
-
 
         if metric == "euclidean":
             self._metric = _nn_euclidean_distance

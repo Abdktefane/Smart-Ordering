@@ -3,10 +3,23 @@ import errno
 import argparse
 import numpy as np
 import cv2
+from utils.hyper_params import default_params
 import tensorflow.compat.v1 as tf
 
 
-def create_box_encoder(model_filename, input_name="images", output_name="features", batch_size=32):
+def create_box_encoder(
+        model_filename=default_params['feature_model_path'],
+        input_name="images",
+        output_name="features",
+        batch_size=32
+):
+    """
+    @param model_filename: the path to frozen graph
+    @return: encoder : Callable[image, ndarray] -> ndarray
+        The encoder function takes as input a BGR color image and a matrix of
+        bounding boxes in format `(x, y, w, h)` and returns a matrix of
+        corresponding feature vectors.
+    """
     image_encoder = ImageEncoder(model_filename, input_name, output_name)
     image_shape = image_encoder.image_shape
 
@@ -86,9 +99,6 @@ def _run_in_batches(f, data_dict, out, batch_size):
 
 
 class ImageEncoder(object):
-    # checkpoint_filename = --model= resources/networks/mars-small128.pb
-    # input_name = --mot_dir= ./MOT16/train
-    # output_name = --output_dir=./resources/detections/MOT16_train
 
     def __init__(self, checkpoint_filename, input_name="images", output_name="features"):
         self.session = tf.Session()

@@ -78,6 +78,43 @@ BACKUP_COLORS = [
 FIRST_THREE_COLORS = ['red', 'yellow', 'green']
 
 
+def paint_overlay(
+        image,
+        prediction,
+        min_score_thresh=0.4,
+        max_boxes_to_draw=20,
+        line_thickness=6,
+        skip_boxes=False,
+        skip_scores=False,  # TODO make default value true
+        skip_labels=False,  # TODO make default value true
+        skip_track_ids=False,
+        fps=None
+):
+    trackers_ids = prediction[:, 0]
+    boxes = prediction[:, 1:5]
+    classes = prediction[:, 6].astype(int)
+    scores = prediction[:, 5]
+    category_index = {k: {'id': k, 'name': coco_id_mapping[k]} for k in coco_id_mapping}
+    img = np.array(image)
+    visualize_boxes_and_labels_on_image_array(
+        image=img,
+        boxes=boxes,
+        classes=classes,
+        scores=scores,
+        category_index=category_index,
+        min_score_thresh=min_score_thresh,
+        max_boxes_to_draw=max_boxes_to_draw,
+        line_thickness=line_thickness,
+        track_ids=trackers_ids,
+        skip_boxes=skip_boxes,
+        skip_scores=skip_scores,
+        skip_labels=skip_labels,
+        skip_track_ids=skip_track_ids,
+        fps=fps
+    )
+    return img
+
+
 def _get_multiplier_for_color_randomness():
     """Returns a multiplier to get semi-random colors from successive indices.
 
@@ -106,35 +143,6 @@ def _get_multiplier_for_color_randomness():
     return prime_candidates[inds[0]]
 
 
-def paint_overlay(
-        image,
-        prediction,
-        min_score_thresh=0.4,
-        max_boxes_to_draw=20,
-        line_thickness=6,
-        fps=None
-):
-    trackers_ids = prediction[:, 0]
-    boxes = prediction[:, 1:5]
-    classes = prediction[:, 6].astype(int)
-    scores = prediction[:, 5]  # TODO remove scores from here
-    category_index = {k: {'id': k, 'name': coco_id_mapping[k]} for k in coco_id_mapping}
-    img = np.array(image)
-    visualize_boxes_and_labels_on_image_array(
-        image=img,
-        boxes=boxes,
-        classes=classes,
-        scores=scores,
-        category_index=category_index,
-        min_score_thresh=min_score_thresh,
-        max_boxes_to_draw=max_boxes_to_draw,
-        line_thickness=line_thickness,
-        track_ids=trackers_ids,
-        fps=fps
-    )
-    return img
-
-
 def visualize_boxes_and_labels_on_image_array(
         image,
         boxes,
@@ -153,8 +161,8 @@ def visualize_boxes_and_labels_on_image_array(
         line_thickness=6,
         groundtruth_box_visualization_color='black',
         skip_boxes=False,
-        skip_scores=False,  # TODO make it true
-        skip_labels=False,  # TODO make it true
+        skip_scores=False,
+        skip_labels=False,
         skip_track_ids=False,
         fps=None
 ):
@@ -365,7 +373,6 @@ def draw_bounding_box_on_image_array(
             font=font
         )
         text_bottom -= text_height - 2 * margin
-    # np.copyto(src_image, np.array(image))
 
 
 def draw_fps(image, fps, fill_color='white', line_color='black', thickness=4):

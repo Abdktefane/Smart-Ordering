@@ -10,9 +10,7 @@ class TrackState:
     the track state is changed to `confirmed`. Tracks that are no longer alive
     are classified as `deleted` to mark them for removal from the set of active
     tracks.
-
     """
-
     Tentative = 1
     Confirmed = 2
     Deleted = 3
@@ -62,10 +60,13 @@ class Track:
     features : List[ndarray]
         A cache of features. On each measurement update, the associated feature
         vector is added to this list.
-
+    confidence : int
+        how mush confidence associated with this track.
+    class_ : int
+        the index of what type of object we track.
     """
 
-    # TODO add class and score here and update them in update method and return it in to_visualize() functions
+    # TODO add class and score here and update them in update method and return it in to_visualize() functions (DONE)
     def __init__(self, mean, covariance, track_id, n_init, max_age, confidence, class_, feature=None):
         self.mean = mean
         self.covariance = covariance
@@ -85,29 +86,42 @@ class Track:
         self.class_ = class_
 
     def to_base(self):
-        return util.box_to_pascal(self.mean[:4].copy())
-
-    def to_visualize(self):
-        # return np.c_((self.to_base(), self.confidence, self.class_))
-        tr = self.to_base()
-        return np.c_[self.track_id, self.to_base(), self.confidence, self.class_]
-        # return [self.track_id, tr, self.confidence, self.class_]
-
-    def to_tlbr(self):
-        """Get current position in bounding box format `(min x, miny, max x,
-        max y)`.
+        """
+        the base format of bounding box `(min x, miny, max x, max y)`.
 
         Returns
         -------
         ndarray
             The bounding box.
+        """
+        return util.box_to_pascal(self.mean[:4].copy())
 
+    def to_visualize(self):
+        """
+        convert to visualize format`(track_id, min x, miny, max x, max y, score, class)`.
+
+        Returns
+        -------
+        ndarray
+            The bounding box.
+        """
+        return np.c_[self.track_id, self.to_base(), self.confidence, self.class_]
+
+    def to_tlbr(self):
+        """
+        Get current position in bounding box format `(min x, miny, max x, max y)`.
+
+        Returns
+        -------
+        ndarray
+            The bounding box.
         """
         base = self.to_base()
         return np.array((base[1], base[0], base[3], base[2]))
 
     def predict(self, kf):
-        """Propagate the state distribution to the current time step using a
+        """
+        Propagate the state distribution to the current time step using a
         Kalman filter prediction step.
 
         Parameters
@@ -121,7 +135,8 @@ class Track:
         self.time_since_update += 1
 
     def update(self, kf, detection):
-        """Perform Kalman filter measurement update step and update the feature
+        """
+        Perform Kalman filter measurement update step and update the feature
         cache.
 
         Parameters
@@ -138,20 +153,18 @@ class Track:
         self.features.append(detection.feature)
         self.hits += 1
         self.time_since_update = 0
-        if self.state == TrackState.Tentative and self.hits >= self._n_init:
+        if self.is_tentative() and self.hits >= self._n_init:
             self.state = TrackState.Confirmed
 
     def mark_missed(self):
-        """Mark this track as missed (no association at the current time step).
-        """
+        """Mark this track as missed (no association at the current time step)."""
         if self.state == TrackState.Tentative:
             self.state = TrackState.Deleted
         elif self.time_since_update > self._max_age:
             self.state = TrackState.Deleted
 
     def is_tentative(self):
-        """Returns True if this track is tentative (unconfirmed).
-        """
+        """Returns True if this track is tentative (unconfirmed)."""
         return self.state == TrackState.Tentative
 
     def is_confirmed(self):
