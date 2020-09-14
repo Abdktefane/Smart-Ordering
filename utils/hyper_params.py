@@ -9,8 +9,8 @@ default_params = {
     "max_age": 10,                                          # age of tracks
     "nn_init": 3,                                           # tentative time of tracks
     "detector_model_name": "efficientdet-d0",               # detector model type
-    "detector_saved_model_dir": "savedmodeldir",            # path to detector model graph file
-    "eff_det_0_model_path": "efficientdet-d0",              # path to efficient det 0 model checkpoint
+    "detector_saved_model_dir": "resources/savedmodeldir",            # path to detector model graph file
+    "eff_det_0_model_path": "resources/efficientdet-d0",              # path to efficient det 0 model checkpoint
     "tracker_model_name": "sort",                           # tracker model type
-    "feature_model_path": "networks/mars-small128.pb",      # path to feature extractor model checkpoint
+    "feature_model_path": "resources/networks/mars-small128.pb",      # path to feature extractor model checkpoint
 }

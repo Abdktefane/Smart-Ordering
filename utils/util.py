@@ -3,7 +3,7 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 from typing import Text, Tuple, Union
 from trackers.kalman_filter import chi2inv95
-from sklearn.utils.linear_assignment_ import linear_assignment  # TODO check if that solve with scipy.optimize
+#from sklearn.utils.linear_assignment_ import linear_assignment  # TODO check if that solve with scipy.optimize
 
 INFINITY_COST = 1e+5
 
@@ -250,8 +250,9 @@ def min_cost_matching(
         return [], track_indices, detection_indices  # Nothing to match.
     cost_matrix = distance_metric(tracks, detections, track_indices, detection_indices)
     cost_matrix[cost_matrix > max_distance] = max_distance + 1e-5  # TODO search what happen here.
-    # indices = linear_assignment(cost_matrix)
-    indices = linear_sum_assignment(cost_matrix)
+    # indices = linear_assignment(cost_matrix) # Old method
+    # indices = linear_sum_assignment(cost_matrix)
+    indices = np.array(list(zip(*linear_sum_assignment(cost_matrix))))
 
     matches, unmatched_tracks, unmatched_detections = [], [], []
     for col, detection_idx in enumerate(detection_indices):

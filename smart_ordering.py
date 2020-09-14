@@ -89,12 +89,6 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--max_boxes_to_draw",
-        default=default_params["max_boxes_to_draw"],
-        help="the max tracking object"
-    )
-
-    parser.add_argument(
         "--max_cosine_distance",
         default=default_params["max_cosine_distance"],
         help="threshold for cosine similarity"
