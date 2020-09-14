@@ -1,7 +1,7 @@
 # Smart Ordering
 
 [1] Abd al-Rahman al-Ktefane, Adel Kaboul, Ammar Abo Azan, Oday Mourad. Smart Ordering: Scalable and Efficient Person Tracker and Sorter 2020.
-paper link: https://arxiv.org/abs/1911.09070
+[Paper Link]: (https://drive.google.com/file/d/1rZ4MeCHHzCDzIDaZSA_OVspeo8w7IczO/view?usp=sharing)
 
 **Quick install dependencies: ```pip install -r requirements.txt```**
 
@@ -33,6 +33,7 @@ Then you will get:
 
 ## 4. Run The Tracker.
     !python smart_ordering.py --tracker_model_name=deep_sort --image_size=512x512
+Check `python smart_ordering.py -h` for an overview of available options.
 
 
 ## 5. Package Diagram.
@@ -72,4 +73,32 @@ Then you will get:
 
 
 ```
+## 6. Highlevel overview of source files
+In the top-level directory are executable scripts to execute, evaluate, and
+visualize the tracker. The main entry point is in `smart_ordering.py`.
+This file runs the program with front camera of laptop.
+In package `detectors` is the main detecting code:
+* `detector.py`: Detector base class that represent a blueprint for other detectors
+   models and should adopt it.
+* `detection.py`: Detection base class.
+* `eff_det_0.py`: child of `detector.py` and our offical tracker.
 
+In package `trackers` is the main tracking code:
+* `tracker.py`: Tracker base class that represent a blueprint for other trackers
+   models and should adopt it.
+* `track.py`: The track class contains single-target track data such as Kalman
+  state, number of hits, misses, hit streak, associated feature vectors, etc.
+* `kalman_filter.py`: A Kalman filter implementation and concrete
+   parametrization for image space filtering.
+* `sort_tracker.py`: implementation of SORT algorithm for tracking.
+* `deep_tracker.py`: implementation of Deep_SORT algorithm for tracking.
+
+In package `utils` is the main helper tool's code:
+* `features_util.py`: This module contains code helps  in build and run feature extractor model
+   that used in deep_SORT algorithm.
+* `hyper_params.py`: This module contains code for default parameter value.
+* `nn_matching.py`: A module for a nearest neighbor matching metric.
+* `overlay_util.py`: A module contains a low level drawing functions for drawing
+   overlay bounding boxes over orignal image.
+* `util.py`: This module contains helper code for min cost matching problem solving and
+   the matching cascade algorithm and linear algebra operations.
