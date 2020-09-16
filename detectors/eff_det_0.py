@@ -37,13 +37,12 @@ class EfficientDet0(Detector):
             min_score_thresh=default_params['min_score_thresh'],
             max_boxes_to_draw=default_params['max_boxes_to_draw']
     ):
-        super(EfficientDet0, self).__init__(config)
         config.is_training_bn = False
         config.image_size = parse_image_size(image_size)
         config.nms_configs.score_thresh = min_score_thresh
         config.nms_configs.max_output_size = max_boxes_to_draw
         config.anchor_scale = [1.0, 1.0, 1.0, 1.0, 1.0]
-        self.config = config
+        super(EfficientDet0, self).__init__(config)
         self.driver = inference.ServingDriver(
             model_name=default_params["detector_model_name"],
             ckpt_path=default_params["eff_det_0_model_path"],

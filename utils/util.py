@@ -3,7 +3,8 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 from typing import Text, Tuple, Union
 from trackers.kalman_filter import chi2inv95
-#from sklearn.utils.linear_assignment_ import linear_assignment  # TODO check if that solve with scipy.optimize
+
+from sklearn.utils.linear_assignment_ import linear_assignment  # TODO check if that solve with scipy.optimize
 
 INFINITY_COST = 1e+5
 
@@ -31,7 +32,7 @@ def box_to_pascal(box):
     """
     width = np.sqrt(box[2] * box[3])  # width = square root(scale * ratio)
     height = box[2] / width  # height = scale / width
-    return np.c_[box[1] - (height / 2.), box[0] - (width / 2.), box[1] + (height / 2.), box[0] + (width / 2.)]
+    return [box[1] - (height / 2.), box[0] - (width / 2.), box[1] + (height / 2.), box[0] + (width / 2.)]
 
 
 def parse_image_size(image_size: Union[Text, int, Tuple[int, int]]):
@@ -79,7 +80,7 @@ def iou(bbox, candidates):
         occluded by the candidate.
 
     """
-    bbox = bbox[0]
+    # bbox = bbox[0]
     bbox_tl = bbox[:2]
     bbox_br = bbox[2:]
     candidates_tl = candidates[:, :2]
@@ -91,58 +92,12 @@ def iou(bbox, candidates):
     ]
     br = np.c_[np.minimum(bbox_br[0], candidates_br[:, 0])[:, np.newaxis],  # max between y in bottom right
                np.minimum(bbox_br[1], candidates_br[:, 1])[:, np.newaxis]]  # max between x in bottom right
-    wh = np.maximum(0., br - tl)
+    hw = np.maximum(0., br - tl)
 
-    area_intersection = wh.prod(axis=1)
+    area_intersection = hw.prod(axis=1)
     area_bbox = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
     area_candidates = [(c[2] - c[0]) * (c[3] - c[1]) for c in candidates]
     return area_intersection / (area_bbox + area_candidates - area_intersection)
-
-
-def iou_cost(
-        tracks,
-        detections,
-        track_indices=None,
-        detection_indices=None
-):
-    """An intersection over union distance metric.
-
-    Parameters
-    ----------
-    tracks : List[deep_sort.track.Track]
-        A list of tracks.
-    detections : List[deep_sort.detection.Detection]
-        A list of detections.
-    track_indices : Optional[List[int]]
-        A list of indices to tracks that should be matched. Defaults to
-        all `tracks`.
-    detection_indices : Optional[List[int]]
-        A list of indices to detections that should be matched. Defaults
-        to all `detections`.
-
-    Returns
-    -------
-    ndarray
-        Returns a cost matrix of shape
-        len(track_indices), len(detection_indices) where entry (i, j) is
-        `1 - iou(tracks[track_indices[i]], detections[detection_indices[j]])`.
-
-    """
-    if track_indices is None:
-        track_indices = np.arange(len(tracks))
-    if detection_indices is None:
-        detection_indices = np.arange(len(detections))
-
-    cost_matrix = np.zeros((len(track_indices), len(detection_indices)))
-    for row, track_idx in enumerate(track_indices):
-        if tracks[track_idx].time_since_update > 1:
-            cost_matrix[row, :] = INFINITY_COST
-            continue
-
-        bbox = tracks[track_idx].to_base()
-        candidates = np.asarray([detections[i].to_base() for i in detection_indices])
-        cost_matrix[row, :] = 1. - iou(bbox, candidates)
-    return cost_matrix
 
 
 def gate_cost_matrix(
@@ -200,6 +155,53 @@ def gate_cost_matrix(
     return cost_matrix
 
 
+def iou_cost(
+        tracks,
+        detections,
+        track_indices=None,
+        detection_indices=None
+):
+    """An intersection over union distance metric.
+
+    Parameters
+    ----------
+    tracks : List[deep_sort.track.Track]
+        A list of tracks.
+    detections : List[deep_sort.detection.Detection]
+        A list of detections.
+    track_indices : Optional[List[int]]
+        A list of indices to tracks that should be matched. Defaults to
+        all `tracks`.
+    detection_indices : Optional[List[int]]
+        A list of indices to detections that should be matched. Defaults
+        to all `detections`.
+
+    Returns
+    -------
+    ndarray
+        Returns a cost matrix of shape
+        len(track_indices), len(detection_indices) where entry (i, j) is
+        `1 - iou(tracks[track_indices[i]], detections[detection_indices[j]])`.
+
+    """
+    if track_indices is None:
+        track_indices = np.arange(len(tracks))
+    if detection_indices is None:
+        detection_indices = np.arange(len(detections))
+
+    cost_matrix = np.zeros((len(track_indices), len(detection_indices)))
+    for row, track_idx in enumerate(track_indices):
+        # if tracks[track_idx].time_since_update > tracks[track_idx].max_age:
+        if tracks[track_idx].time_since_update > 1:
+            cost_matrix[row, :] = INFINITY_COST
+            continue
+
+        bbox = tracks[track_idx].to_base()
+        candidates = np.asarray([detections[i].to_base() for i in detection_indices])
+        cost_matrix[row, :] = 1. - iou(bbox, candidates)
+    return cost_matrix
+
+
 def min_cost_matching(
         distance_metric,
         max_distance,
@@ -241,6 +243,9 @@ def min_cost_matching(
         * A list of unmatched detection indices.
 
     """
+    if distance_metric == iou_cost:
+        max_distance = 1 - max_distance
+
     if track_indices is None:
         track_indices = np.arange(len(tracks))
     if detection_indices is None:
@@ -249,10 +254,9 @@ def min_cost_matching(
     if len(detection_indices) == 0 or len(track_indices) == 0:
         return [], track_indices, detection_indices  # Nothing to match.
     cost_matrix = distance_metric(tracks, detections, track_indices, detection_indices)
-    cost_matrix[cost_matrix > max_distance] = max_distance + 1e-5  # TODO search what happen here.
-    # indices = linear_assignment(cost_matrix) # Old method
-    # indices = linear_sum_assignment(cost_matrix)
-    indices = np.array(list(zip(*linear_sum_assignment(cost_matrix))))
+    # cost_matrix[cost_matrix > max_distance] = max_distance + 1e-5  # TODO search what happen here.
+    indices = linear_assignment(cost_matrix)  # Old method
+    # indices = np.array(list(zip(*linear_sum_assignment(-cost_matrix))))
 
     matches, unmatched_tracks, unmatched_detections = [], [], []
     for col, detection_idx in enumerate(detection_indices):
@@ -346,7 +350,150 @@ def matching_cascade(
     return matches, unmatched_tracks, unmatched_detections
 
 
+@jit
+def iou_sort(boxA, boxB):
+    """
+    Computes Intersection Over Union between two boxes in the form [y1,x1,y2,x2]
+    IOU = Area of Overlap / Area of Union
+    Ps: COCO ("Common Objects in Context") Bounding box: (x-top left, y-top left, width, height)
+    Ps: Pascal VOC ("Visual Object Classes") Bounding box :(x-top left, y-top left,x-bottom right, y-bottom right)
+    """
+    yA = np.maximum(boxA[0], boxB[0])
+    xA = np.maximum(boxA[1], boxB[1])
+    yB = np.minimum(boxA[2], boxB[2])
+    xB = np.minimum(boxA[3], boxB[3])
+    w = np.maximum(0., xB - xA)
+    h = np.maximum(0., yB - yA)
+    interArea = w * h
+    boxAArea = (boxA[2] - boxA[0]) * (boxA[3] - boxA[1])
+    boxBArea = (boxB[2] - boxB[0]) * (boxB[3] - boxB[1])
+    o = interArea / float(boxAArea + boxBArea - interArea)
+    return o
+
+
+def min_cost_matching_sort(
+        max_distance,
+        tracks,
+        detections,
+        track_indices=None,
+        detection_indices=None
+):
+    """
+    Assigns detections to tracked object (both represented as bounding boxes)
+
+    Returns 3 lists of matches, unmatched_detections_indices and unmatched_trackers
+    """
+    if track_indices is None:
+        track_indices = np.arange(len(tracks))
+    if detection_indices is None:
+        detection_indices = np.arange(len(detections))
+
+    if len(detection_indices) == 0 or len(track_indices) == 0:
+        return [], track_indices, detection_indices  # Nothing to match.
+    cost_matrix = np.zeros((len(track_indices), len(detection_indices)))
+    # create cost matrix (complexity is n*n for iou)
+    for row, trk_idx in enumerate(track_indices):
+        for col, det_idx in enumerate(detection_indices):
+            track = tracks[trk_idx].to_base()[0]
+            det = detections[det_idx].to_base()
+            cost_matrix[row, col] = 1 - iou_sort(track, det)
+    indices = linear_assignment(cost_matrix)  # Old method
+    # indices = np.array(list(zip(*linear_sum_assignment(cost_matrix))))
+
+    matches, unmatched_tracks, unmatched_detections = [], [], []
+    for col, detection_idx in enumerate(detection_indices):
+        if col not in indices[:, 1]:
+            unmatched_detections.append(detection_idx)
+    for row, track_idx in enumerate(track_indices):
+        if row not in indices[:, 0]:
+            unmatched_tracks.append(track_idx)
+    for row, col in indices:
+        track_idx = track_indices[row]
+        detection_idx = detection_indices[col]
+        if cost_matrix[row, col] > max_distance:
+            unmatched_tracks.append(track_idx)
+            unmatched_detections.append(detection_idx)
+        else:
+            matches.append((track_idx, detection_idx))
+    return matches, unmatched_tracks, unmatched_detections
+
+
 '''
+working sort assignment code
+
+@jit
+def iou_sort(boxA, boxB):
+    """
+    Computes Intersection Over Union between two boxes in the form [y1,x1,y2,x2]
+    IOU = Area of Overlap / Area of Union
+    Ps: COCO ("Common Objects in Context") Bounding box: (x-top left, y-top left, width, height)
+    Ps: Pascal VOC ("Visual Object Classes") Bounding box :(x-top left, y-top left,x-bottom right, y-bottom right)
+    """
+    yA = np.maximum(boxA[0], boxB[0])
+    xA = np.maximum(boxA[1], boxB[1])
+    yB = np.minimum(boxA[2], boxB[2])
+    xB = np.minimum(boxA[3], boxB[3])
+    w = np.maximum(0., xB - xA)
+    h = np.maximum(0., yB - yA)
+    interArea = w * h
+    boxAArea = (boxA[2] - boxA[0]) * (boxA[3] - boxA[1])
+    boxBArea = (boxB[2] - boxB[0]) * (boxB[3] - boxB[1])
+    o = interArea / float(boxAArea + boxBArea - interArea)
+    return o
+
+
+def min_cost_matching_sort(
+        max_distance,
+        tracks,
+        detections,
+        track_indices=None,
+        detection_indices=None
+):
+    """
+    Assigns detections to tracked object (both represented as bounding boxes)
+
+    Returns 3 lists of matches, unmatched_detections_indices and unmatched_trackers
+    """
+    if track_indices is None:
+        track_indices = np.arange(len(tracks))
+    if detection_indices is None:
+        detection_indices = np.arange(len(detections))
+
+    if len(detection_indices) == 0 or len(track_indices) == 0:
+        return [], track_indices, detection_indices  # Nothing to match.
+    cost_matrix = np.zeros((len(track_indices), len(detection_indices)))
+    # create cost matrix (complexity is n*n for iou)
+    for row, trk_idx in enumerate(track_indices):
+        for col, det_idx in enumerate(detection_indices):
+            track = tracks[trk_idx].to_base()[0]
+            det = detections[det_idx].to_base()
+            cost_matrix[row, col] = iou_sort(track, det)
+    # indices = linear_assignment(cost_matrix)  # Old method
+    # indices = linear_sum_assignment(cost_matrix)
+    indices = np.array(list(zip(*linear_sum_assignment(-cost_matrix))))
+
+    matches, unmatched_tracks, unmatched_detections = [], [], []
+    for col, detection_idx in enumerate(detection_indices):
+        if col not in indices[:, 1]:
+            unmatched_detections.append(detection_idx)
+    for row, track_idx in enumerate(track_indices):
+        if row not in indices[:, 0]:
+            unmatched_tracks.append(track_idx)
+    for row, col in indices:
+        track_idx = track_indices[row]
+        detection_idx = detection_indices[col]
+        if cost_matrix[row, col] > max_distance:
+            unmatched_tracks.append(track_idx)
+            unmatched_detections.append(detection_idx)
+        else:
+            matches.append((track_idx, detection_idx))
+    return matches, unmatched_tracks, unmatched_detections
+
+
+'''
+
+'''
+old assignment sort code
 def associate_detections_to_trackers(detections, trackers, iou_threshold=0.3):
     """
     Assigns detections to tracked object (both represented as bounding boxes)

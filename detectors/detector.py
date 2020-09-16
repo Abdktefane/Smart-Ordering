@@ -16,7 +16,7 @@ class Detector(ABC):
     """
 
     def __init__(self, config):
-        self.config= config
+        self.config = config
 
     def detect(self, images):
         """

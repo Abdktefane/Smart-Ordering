@@ -27,6 +27,11 @@ class Sort(Tracker):
             tracks=self.tracks,
             detections=detections
         )
+        '''return util.min_cost_matching_sort(
+            max_distance= self.min_score_thresh,
+            tracks=self.tracks,
+            detections=detections
+        )'''
 
     def _update(self, detections):
         """

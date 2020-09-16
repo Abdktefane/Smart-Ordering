@@ -7,7 +7,7 @@ from utils import nn_matching
 from utils import features_util
 
 
-# TODO add feature extractor here and put it in _modify_detections) (DONE)
+# TODO add feature extractor here and put it in (_modify_detections) (DONE)
 class DeepSort(Tracker):
     def __init__(
             self,

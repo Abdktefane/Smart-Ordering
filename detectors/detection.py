@@ -45,27 +45,18 @@ class Detection(object):
         """Convert bounding box to format `(min x, min y, max x, max y)`, i.e.,
         `(top left, bottom right)`.
         """
-        # ret = self.tlwh.copy()
-        # ret[2:] += ret[:2]
-        # return ret
         return self.base.copy()
 
     def to_tlbr(self):
         """Convert bounding box to format `(min x, min y, max x, max y)`, i.e.,
         `(top left, bottom right)`.
         """
-        # ret = self.tlwh.copy()
-        # ret[2:] += ret[:2]
-        # return ret
         return np.array((self.base[1], self.base[0], self.base[3], self.base[2]))
 
     def to_xyah(self):
         """Convert bounding box to format `(center x, center y, aspect ratio,height)`,
          where the aspect ratio is `width / height`.
         """
-        # ret = self.tlwh.copy()
-        # ret[:2] += ret[2:] / 2
-        # ret[2] /= ret[3]
         return util.box_to_coco(self.base.copy())
 
     def as_np(self):

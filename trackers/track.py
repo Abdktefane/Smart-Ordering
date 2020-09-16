@@ -81,7 +81,7 @@ class Track:
             self.features.append(feature)
 
         self._n_init = n_init
-        self._max_age = max_age
+        self.max_age = max_age
         self.confidence = confidence
         self.class_ = class_
 
@@ -105,7 +105,7 @@ class Track:
         ndarray
             The bounding box.
         """
-        return np.c_[self.track_id, self.to_base(), self.confidence, self.class_]
+        return np.c_[self.track_id, np.array(self.to_base()).reshape(1, 4), self.confidence, self.class_]
 
     def to_tlbr(self):
         """
@@ -117,7 +117,7 @@ class Track:
             The bounding box.
         """
         base = self.to_base()
-        return np.array((base[1], base[0], base[3], base[2]))
+        return np.array((base[1], base[0], base[3], base[2])).reshape(1, 4)
 
     def predict(self, kf):
         """
@@ -160,7 +160,7 @@ class Track:
         """Mark this track as missed (no association at the current time step)."""
         if self.state == TrackState.Tentative:
             self.state = TrackState.Deleted
-        elif self.time_since_update > self._max_age:
+        elif self.time_since_update > self.max_age:
             self.state = TrackState.Deleted
 
     def is_tentative(self):
