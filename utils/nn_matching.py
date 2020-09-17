@@ -54,6 +54,9 @@ def _cosine_distance(a, b, data_is_normalized=False):
     if not data_is_normalized:
         a = np.asarray(a) / np.linalg.norm(a, axis=1, keepdims=True)
         b = np.asarray(b) / np.linalg.norm(b, axis=1, keepdims=True)
+    # where 'np.dot(a, b.T)' return vector of shape (L) where L is number of detections
+    # and each value represent cosine similarity which 1 is perfect and 0 is bad
+    # when we call '1. - np.dot(a, b.T)' 0 is perfect and 1 is bad
     return 1. - np.dot(a, b.T)
 
 
@@ -88,7 +91,7 @@ def _nn_cosine_distance(x, y):
         where x is self.samples[target]
     y : ndarray
         A matrix of M row-vectors (query points).
-        where y is features
+        where y is all features
 
     Returns
     -------

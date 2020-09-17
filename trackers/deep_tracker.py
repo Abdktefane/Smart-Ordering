@@ -74,8 +74,8 @@ class DeepSort(Tracker):
             features = np.array([dets[i].feature for i in detection_indices])
             # get track id  from all trackers
             targets = np.array([tracks[i].track_id for i in track_indices])
-            # the cost"cosine distance or cosine similarity" between each track_id and each feature and gated
-            # with max_cosine_distance
+            # the cost"cosine distance or cosine similarity" between each track_id and each feature
+            # without gated with max_cosine_distance
             cost_matrix = self.metric.distance(features, targets)
             # measure mah distance and gated it and modify cost matrix
             cost_matrix = util.gate_cost_matrix(
@@ -86,7 +86,7 @@ class DeepSort(Tracker):
                 track_indices=track_indices,
                 detection_indices=detection_indices
             )
-            # the final cost matrix with cosine distance and mah_distance and two gate equation
+            # the final cost matrix with cosine distance and  mah_distance gated equation
             return cost_matrix
 
         # Split track set into confirmed and unconfirmed tracks.

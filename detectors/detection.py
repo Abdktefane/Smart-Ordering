@@ -36,7 +36,8 @@ class Detection(object):
             self.feature = None
 
     def set_feature(self, feature):
-        self.feature = feature
+        # self.feature = feature
+        self.feature = np.asarray(feature, dtype=np.float32)
 
     def get_feature(self):
         return self.feature

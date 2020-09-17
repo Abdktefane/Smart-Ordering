@@ -11,7 +11,7 @@ def create_box_encoder(
         model_filename=default_params['feature_model_path'],
         input_name="images",
         output_name="features",
-        batch_size=32
+        batch_size=default_params['max_boxes_to_draw']
 ):
     """
     @param model_filename: the path to frozen graph
@@ -63,16 +63,17 @@ def extract_image_patch(image, bbox, patch_shape):
     """
     bbox = np.array(bbox)
     if patch_shape is not None:
-        # correct aspect ratio to patch shape
-        target_aspect = float(patch_shape[1]) / patch_shape[0]
-        new_width = target_aspect * bbox[3]
-        bbox[0] -= (new_width - bbox[2]) / 2
-        bbox[2] = new_width
+        # correct aspect ratio to patch shape where ==>  height = patch_shape[0], width = patch_shape[1]
+        target_width = patch_shape[1]
+        target_height = patch_shape[0]
+        target_ratio = target_width / target_height
+        bbox_height = bbox[3] - bbox[1]
+        # here we extract new width from equation (width/height) * height => width
+        new_width = target_ratio * bbox_height
+        # modify x_min with new width
+        bbox[0] -= new_width / 2
 
-    # convert to top left, bottom right
-    bbox[2:] += bbox[:2]
     bbox = bbox.astype(np.int)
-
     # clip at image boundaries
     bbox[:2] = np.maximum(0, bbox[:2])
     bbox[2:] = np.minimum(np.asarray(image.shape[:2][::-1]) - 1, bbox[2:])
@@ -106,14 +107,16 @@ class ImageEncoder(object):
             graph_def = tf.GraphDef()
             graph_def.ParseFromString(file_handle.read())
         tf.import_graph_def(graph_def, name="net")
-        # self.input_var = tf.get_default_graph().get_tensor_by_name("net/%s:0" % input_name)
-        # self.output_var = tf.get_default_graph().get_tensor_by_name("net/%s:0" % output_name)
+        # input_var = Tensor("images:0", shape=(None, 128, 64, 3), dtype=uint8) where None is batch size
         self.input_var = tf.compat.v1.get_default_graph().get_tensor_by_name("%s:0" % input_name)
+        # output_var = Tensor("features:0", shape=(None, 128), dtype=float32) where None is batch size
         self.output_var = tf.compat.v1.get_default_graph().get_tensor_by_name("%s:0" % output_name)
 
         assert len(self.output_var.get_shape()) == 2
         assert len(self.input_var.get_shape()) == 4
+        # self.feature_dim = 128
         self.feature_dim = self.output_var.get_shape().as_list()[-1]
+        # self.image_shape = [128, 64, 3]
         self.image_shape = self.input_var.get_shape().as_list()[1:]
 
     def __call__(self, data_x, batch_size=32):
