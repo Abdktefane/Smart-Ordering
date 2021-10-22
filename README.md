@@ -1,4 +1,5 @@
 # Smart Ordering
+A smart application to track multiple person and arrange them according to the time of arrival based on [efficientdet]: (https://github.com/google/automl/tree/master/efficientdet)
 
 [1] Abd al-Rahman al-Ktefane, Adel Kaboul, Ammar Abo Azan, Oday Mourad. Smart Ordering: Scalable and Efficient Person Tracker and Sorter 2020.
 [Paper Link]: (https://drive.google.com/file/d/1rZ4MeCHHzCDzIDaZSA_OVspeo8w7IczO/view?usp=sharing)
